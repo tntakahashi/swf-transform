@@ -210,38 +210,50 @@ class BaseActiveMQ(object):
             brokers = brokers.split(",")
 
         broker_timeout = self.broker.get("broker_timeout", 10)
+        resolve_hostnames = self.broker.get("resolve_hostnames", False)
 
         broker_addresses = []
         for b in brokers:
             try:
                 b, port = b.split(":")
 
-                # Ask for IPv4 stream (TCP) addresses to avoid duplicate
-                # entries for multiple socket types. Some platforms/DNS
-                # configurations return the same address more than once;
-                # we'll deduplicate below.
-                addrinfos = socket.getaddrinfo(
-                    b, 0, socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
-                )
+                if resolve_hostnames:
+                    # Resolve hostname to IPv4 addresses only (socket.AF_INET = IPv4)
+                    # Use socket.AF_INET6 for IPv6, or socket.AF_UNSPEC for both
+                    # SOCK_STREAM = TCP, IPPROTO_TCP ensures TCP protocol
+                    addrinfos = socket.getaddrinfo(
+                        b, 0, socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP
+                    )
 
-                seen = set()
-                for addrinfo in addrinfos:
-                    b_addr = addrinfo[4][0]
+                    seen = set()
+                    for addrinfo in addrinfos:
+                        b_addr = addrinfo[4][0]
+                        try:
+                            p = int(port)
+                        except Exception:
+                            p = port
+                        pair = (b_addr, p)
+                        if pair in seen:
+                            continue
+                        seen.add(pair)
+                        broker_addresses.append(pair)
+                else:
+                    # Use hostname directly without resolution
+                    self.logger.info(f"Using hostname directly (no resolution): {b}:{port}")
                     try:
                         p = int(port)
                     except Exception:
                         p = port
-                    pair = (b_addr, p)
-                    if pair in seen:
-                        continue
-                    seen.add(pair)
-                    broker_addresses.append(pair)
+                    broker_addresses.append((b, p))
+                    
             except socket.gaierror as error:
                 self.logger.error("Cannot resolve hostname %s: %s" % (b, str(error)))
+            except ValueError as error:
+                self.logger.error("Invalid broker format %s: %s" % (b, str(error)))
 
         self.logger.info(
-            "Resolved broker addresses for channel %s with brokers %s: %s"
-            % (self.name, brokers, broker_addresses)
+            "Broker addresses for channel %s with brokers %s: %s (resolve_hostnames=%s)"
+            % (self.name, brokers, broker_addresses, resolve_hostnames)
         )
 
         use_ssl = self.broker.get("use_ssl", False)
