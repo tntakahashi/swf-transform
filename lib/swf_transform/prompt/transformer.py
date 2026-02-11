@@ -302,7 +302,7 @@ class Transformer:
             if isinstance(handler_kwargs, dict):
                 result_publisher = handler_kwargs.get("result_publisher")
 
-            processing_start_at = datetime.datetime.utcnow()
+            processing_start_at = datetime.datetime.utcnow().isoformat()
             status = False
             result = None
             error = None
@@ -332,11 +332,11 @@ class Transformer:
             slice_result_msg = {
                 "msg_type": "slice_result",
                 "run_id": run_id,
-                "created_at": datetime.datetime.utcnow(),
+                "created_at": datetime.datetime.utcnow().isoformat(),
                 "content": {
                     "requested_at": msg.get("created_at"),
                     "processing_start_at": processing_start_at,
-                    "processed_at": datetime.datetime.utcnow(),
+                    "processed_at": datetime.datetime.utcnow().isoformat(),
                     "state": "done" if status else "failed",
                     "hostname": socket.getfqdn(),
                     "panda_server_url": os.environ.get("PANDA_SERVER_URL", None),
