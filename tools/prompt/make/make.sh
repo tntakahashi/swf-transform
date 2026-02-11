@@ -3,10 +3,9 @@
 CurrentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ToolsPromptDir="$( dirname "$CurrentDir" )"
 ToolsDir="$( dirname "$ToolsPromptDir" )"
-TransformDir="$( dirname "$ToolsDir" )"
-RootDir="$( dirname "$TransformDir" )"
+RootDir="$( dirname "$ToolsDir" )"
 
-EXECNAME=${TransformDir}/bin/run_prompt_wrapper
+EXECNAME=${RootDir}/bin/run_prompt_wrapper
 rm -fr $EXECNAME
 
 workdir=/tmp/idds
@@ -60,11 +59,11 @@ echo zip -r $tmpzip  etc
 zip -r $tmpzip  etc
 cd -
 
-cd ${PromptDir}
+cd ${RootDir}
 echo zip -r $tmpzip  bin
 zip -r $tmpzip  bin
 
 cd -
 
-cat ${PromptDir}/tools/prompt/make/zipheader $tmpzip > $EXECNAME
+cat ${RootDir}/tools/prompt/make/zipheader $tmpzip > $EXECNAME
 chmod +x $EXECNAME
