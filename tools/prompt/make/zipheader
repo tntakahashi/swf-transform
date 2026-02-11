@@ -91,8 +91,8 @@ pwd; ls
 echo unlink run_prompt
 unlink run_prompt
 
-echo rm -fr ${current_dir}/lib_py ${current_dir}/etc ${current_dir}/bin ${current_dir}/tmp_bin ${current_dir}/run_prompt_wrapper ${current_dir}/__pycache__  ${current_dir}/run_workflow.sh ${current_dir}/x509_proxy
-rm -fr ${current_dir}/lib_py ${current_dir}/etc ${current_dir}/bin ${current_dir}/tmp_bin ${current_dir}/run_prompt_wrapper ${current_dir}/__pycache__ ${current_dir}/run_workflow.sh ${current_dir}/x509_proxy
+echo rm -fr ${current_dir}/lib_py ${current_dir}/etc ${current_dir}/bin ${current_dir}/tmp_bin ${current_dir}/run_prompt_wrapper ${current_dir}/__pycache__  ${current_dir}/run_workflow.sh ${current_dir}/x509_proxy 
+rm -fr ${current_dir}/lib_py ${current_dir}/etc ${current_dir}/bin ${current_dir}/tmp_bin ${current_dir}/run_prompt_wrapper ${current_dir}/__pycache__ ${current_dir}/run_workflow.sh ${current_dir}/x509_proxy ${current_dir}/conf
 
 echo "return code: " $ret
 exit $ret

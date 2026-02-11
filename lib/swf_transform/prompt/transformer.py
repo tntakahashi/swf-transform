@@ -54,7 +54,7 @@ class Transformer:
         if not self._broker_initialized:
             self.logger.info("To initialize broker")
 
-            self.logger.info("Getting brokers information from central service")
+            self.logger.info("Getting brokers information")
             broker_info = self.get_broker_info()
             self.logger.debug(f"Broker information received: {broker_info}")
             if broker_info:
@@ -97,7 +97,7 @@ class Transformer:
         """
         self.logger.info("Get broker information through panda server.")
 
-        import idds.common.utils as idds_utils, is_panda_client_verbose
+        import idds.common.utils as idds_utils
         import pandaclient.idds_api as idds_api
 
         idds_server = self.get_idds_server()
@@ -105,7 +105,7 @@ class Transformer:
             idds_utils.json_dumps,
             idds_host=idds_server,
             compress=True,
-            verbose=is_panda_client_verbose(),
+            verbose=idds_utils.is_panda_client_verbose(),
             manager=True,
         )
         ret = client.get_metainfo(name="prompt_broker")
@@ -128,7 +128,9 @@ class Transformer:
                 self.logger.warning("Failed to get meta info from iDDS: %s" % str(ret))
         else:
             meta_info = None
-            self.logger.warning("Failed to get meta info from Panda server: %s" % str(ret))
+            self.logger.warning(
+                "Failed to get meta info from Panda server: %s" % str(ret)
+            )
 
         return meta_info
 
@@ -138,7 +140,7 @@ class Transformer:
         1. If PROMPT_TRANSFORM_CONF env var is set, try to load from that config file
         2. Try to get from PanDA server
         3. Fall back to default local config file (prompt.conf)
-        
+
         :returns: dict with broker configs in format:
             {
                 "transformer_broker": {...},
@@ -155,22 +157,34 @@ class Transformer:
                 if broker_info:
                     # Validate that we have all required broker configs
                     transformer_broker = broker_info.get("transformer_broker")
-                    transformer_broadcast_broker = broker_info.get("transformer_broadcast_broker")
+                    transformer_broadcast_broker = broker_info.get(
+                        "transformer_broadcast_broker"
+                    )
                     result_broker = broker_info.get("result_broker")
-                    
-                    if transformer_broker and transformer_broadcast_broker and result_broker:
+
+                    if (
+                        transformer_broker
+                        and transformer_broadcast_broker
+                        and result_broker
+                    ):
                         ret = {
                             "transformer_broker": transformer_broker,
                             "transformer_broadcast_broker": transformer_broadcast_broker,
                             "result_broker": result_broker,
                         }
-                        self.logger.info("Successfully loaded broker config from PROMPT_TRANSFORM_CONF")
+                        self.logger.info(
+                            "Successfully loaded broker config from PROMPT_TRANSFORM_CONF"
+                        )
                         return ret
                     else:
-                        self.logger.warning("Config file is missing required broker configurations")
+                        self.logger.warning(
+                            "Config file is missing required broker configurations"
+                        )
             except Exception as ex:
-                self.logger.warning(f"Failed to load broker config from PROMPT_TRANSFORM_CONF: {ex}")
-        
+                self.logger.warning(
+                    f"Failed to load broker config from PROMPT_TRANSFORM_CONF: {ex}"
+                )
+
         # Second priority: try panda server
         try:
             broker_info = self.get_broker_info_from_panda_server()
@@ -179,30 +193,42 @@ class Transformer:
                 return broker_info
         except Exception as ex:
             self.logger.warning(f"Failed to get broker info from PanDA server: {ex}")
-        
+
         # Third priority: fall back to default local config file
-        self.logger.info("Attempting to load broker config from default local config file")
+        self.logger.info(
+            "Attempting to load broker config from default local config file"
+        )
         try:
             broker_info = get_broker_config()
             if broker_info:
                 # Validate that we have all required broker configs
                 transformer_broker = broker_info.get("transformer_broker")
-                transformer_broadcast_broker = broker_info.get("transformer_broadcast_broker")
+                transformer_broadcast_broker = broker_info.get(
+                    "transformer_broadcast_broker"
+                )
                 result_broker = broker_info.get("result_broker")
-                
-                if transformer_broker and transformer_broadcast_broker and result_broker:
+
+                if (
+                    transformer_broker
+                    and transformer_broadcast_broker
+                    and result_broker
+                ):
                     ret = {
                         "transformer_broker": transformer_broker,
                         "transformer_broadcast_broker": transformer_broadcast_broker,
                         "result_broker": result_broker,
                     }
-                    self.logger.info("Successfully loaded broker config from local config file")
+                    self.logger.info(
+                        "Successfully loaded broker config from local config file"
+                    )
                     return ret
                 else:
-                    self.logger.warning("Config file is missing required broker configurations")
+                    self.logger.warning(
+                        "Config file is missing required broker configurations"
+                    )
         except Exception as ex:
             self.logger.error(f"Failed to load broker config from local file: {ex}")
-        
+
         self.logger.error("All broker config sources failed")
         return None
 
@@ -321,7 +347,9 @@ class Transformer:
             }
 
             if result_publisher is None:
-                self.logger.warning("No result_publisher provided in handler_kwargs; skipping publish")
+                self.logger.warning(
+                    "No result_publisher provided in handler_kwargs; skipping publish"
+                )
             else:
                 try:
                     result_publisher.publish(slice_result_msg)
@@ -349,9 +377,11 @@ class Transformer:
             transformer_broadcast_subscriber = Subscriber(
                 broker=self._transformer_broadcast_broker,
                 handler=self.transformer_broadcast_handler,
-                namespace=self._namespace
+                namespace=self._namespace,
             )
-            result_publisher = Publisher(broker=self._result_broker, namespace=self._namespace)
+            result_publisher = Publisher(
+                broker=self._result_broker, namespace=self._namespace
+            )
 
             selector = None
             if self._run_id is not None:

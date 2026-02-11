@@ -38,7 +38,14 @@ class MessagingListener(stomp.ConnectionListener):
     """
 
     def __init__(
-        self, broker, handler, handler_kwargs, conn, logger=None, subscriber=None, namespace=None
+        self,
+        broker,
+        handler,
+        handler_kwargs,
+        conn,
+        logger=None,
+        subscriber=None,
+        namespace=None,
     ):
         """
         __init__
@@ -62,7 +69,12 @@ class MessagingListener(stomp.ConnectionListener):
         """
         Error handler
         """
-        self.logger.error("[broker] [%s]: headers:%s, body: %s", self.__broker, frame.headers, frame.body)
+        self.logger.error(
+            "[broker] [%s]: headers:%s, body: %s",
+            self.__broker,
+            frame.headers,
+            frame.body,
+        )
 
     def on_disconnected(self):
         self.logger.warning("STOMP connection disconnected (server or transport).")
@@ -88,7 +100,10 @@ class MessagingListener(stomp.ConnectionListener):
                 hdrs = headers
             self.logger.info("STOMP CONNECTED from broker %s: %s", self.__broker, hdrs)
         except Exception:
-            self.logger.info("STOMP CONNECTED from broker %s (failed to extract headers)", self.__broker)
+            self.logger.info(
+                "STOMP CONNECTED from broker %s (failed to extract headers)",
+                self.__broker,
+            )
 
     def on_heartbeat_timeout(self):
         self.logger.warning("STOMP heartbeat timeout.")
@@ -135,11 +150,18 @@ class MessagingListener(stomp.ConnectionListener):
 
 class BaseActiveMQ(object):
     def __init__(
-        self, name="BaseActiveMQ", namespace=None, logger=None, broker=None, lifetime=3600, **kwargs
+        self,
+        name="BaseActiveMQ",
+        namespace=None,
+        logger=None,
+        broker=None,
+        lifetime=3600,
+        **kwargs,
     ):
         super(BaseActiveMQ, self).__init__()
 
         self.logger = logger
+        self.name = name
         self.setup_logger(self.logger)
         self.namespace = namespace
 
@@ -226,7 +248,8 @@ class BaseActiveMQ(object):
         ssl_ca_certs = self.broker.get("ssl_ca_certs", None)
         if use_ssl:
             import ssl
-            ssl_version = (ssl.PROTOCOL_TLS_CLIENT if ssl_ca_certs else ssl.PROTOCOL_TLS)
+
+            ssl_version = ssl.PROTOCOL_TLS_CLIENT if ssl_ca_certs else ssl.PROTOCOL_TLS
         else:
             ssl_version = None
 
@@ -272,7 +295,7 @@ class BaseActiveMQ(object):
                         self.broker["username"],
                         self.broker["password"],
                         wait=True,
-                        headers={"client-id": self.internal_id}
+                        headers={"client-id": self.internal_id},
                     )
                 # conn.start()
                 return conn
@@ -292,7 +315,7 @@ class BaseActiveMQ(object):
                     self.broker["username"],
                     self.broker["password"],
                     wait=True,
-                    headers={"client-id": self.internal_id}
+                    headers={"client-id": self.internal_id},
                 )
                 # conn.start()
             return conn
@@ -334,7 +357,12 @@ class Publisher(BaseActiveMQ):
         **kwargs,
     ):
         super(Publisher, self).__init__(
-            name=name, instance=instance, logger=logger, broker=broker, lifetime=lifetime, **kwargs
+            name=name,
+            instance=instance,
+            logger=logger,
+            broker=broker,
+            lifetime=lifetime,
+            **kwargs,
         )
         self.broadcast = broadcast
 
@@ -415,7 +443,12 @@ class Subscriber(BaseActiveMQ):
         **kwargs,
     ):
         super(Subscriber, self).__init__(
-            name=name, namespace=namespace, logger=logger, broker=broker, lifetime=lifetime, **kwargs
+            name=name,
+            namespace=namespace,
+            logger=logger,
+            broker=broker,
+            lifetime=lifetime,
+            **kwargs,
         )
         self.listener = None
         self.handler = handler
