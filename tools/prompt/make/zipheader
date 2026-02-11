@@ -23,8 +23,6 @@ then
     ln -fs $(which python3) ./python
 fi
 
-export IDDS_CONFIG=${current_dir}/etc/idds/idds.cfg.client.template
-
 if [[ ! -z "${PANDA_AUTH_DIR}" ]] && [[ ! -z "${PANDA_AUTH_ORIGIN}" ]]; then
     export PANDA_AUTH_ID_TOKEN=$(cat $PANDA_AUTH_DIR);
     export PANDA_AUTH_VO=$PANDA_AUTH_ORIGIN;

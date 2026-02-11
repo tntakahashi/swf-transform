@@ -6,7 +6,7 @@
 # http://www.apache.org/licenses/LICENSE-2.0OA
 #
 # Authors:
-# - Wen Guan, <wen.guan@cern.ch>, 2023
+# - Wen Guan, <wen.guan@cern.ch>, 2026
 
 
-release_version = "2.0.0"
+release_version = "0.1.0"

@@ -22,7 +22,7 @@ classifiers = [
 
 dependencies = [
   "stomp.py",
-  "idds-common==2.3.5",
+  "idds-common",
 ]
 
 [project.urls]
@@ -38,3 +38,8 @@ include-package-data = true
 [tool.setuptools.packages.find]
 where = ["lib"]
 include = ["swf_transform*"]
+
+[tool.setuptools.cmdclass]
+# This doesn't directly work in pyproject.toml, but we document it here.
+# To run the build hook, use: python build_hook.py && pip install .
+# Or create a Makefile/build script that calls build_hook.py first.

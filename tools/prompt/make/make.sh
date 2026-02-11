@@ -3,10 +3,10 @@
 CurrentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ToolsPromptDir="$( dirname "$CurrentDir" )"
 ToolsDir="$( dirname "$ToolsPromptDir" )"
-PromptDir="$( dirname "$ToolsDir" )"
-RootDir="$( dirname "$PromptDir" )"
+TransformDir="$( dirname "$ToolsDir" )"
+RootDir="$( dirname "$TransformDir" )"
 
-EXECNAME=${PromptDir}/bin/run_prompt_wrapper
+EXECNAME=${TransformDir}/bin/run_prompt_wrapper
 rm -fr $EXECNAME
 
 workdir=/tmp/idds
@@ -15,35 +15,20 @@ rm -fr $workdir
 mkdir -p $workdir
 
 echo "setup virtualenv $workdir"
-# source /afs/cern.ch/user/w/wguan/workdisk/conda/setup_mini.sh
-# conda deactivate
-# echo conda env create --prefix=$workdir -f ${WorkflowDir}/tools/workflow/make/environment.yaml
-# conda env create --prefix=$workdir -f ${WorkflowDir}/tools/workflow/make/environment.yaml
-# conda activate $workdir
 
 python3 -m venv $workdir
 source $workdir/bin/activate
 
 echo "install panda client"
 pip install panda-client
-# pip install tabulate requests urllib3==1.26.18 argcomplete packaging anytree networkx stomp.py==8.0.1
-pip install tabulate requests urllib3 argcomplete packaging anytree networkx stomp.py wheel cachetools
+# pip install requests urllib3==1.26.18 argcomplete packaging anytree networkx stomp.py==8.0.1
+pip install requests urllib3 argcomplete packaging stomp.py wheel cachetools
 
 echo "install idds-common"
-python ${RootDir}/common/setup.py clean --all
-python ${RootDir}/common/setup.py install --old-and-unmanageable --force
+pip install idds-common
 
-echo "install idds-client"
-python ${RootDir}/client/setup.py clean --all
-python ${RootDir}/client/setup.py install --old-and-unmanageable --force
-
-echo "install idds-workflow"
-python ${RootDir}/workflow/setup.py clean --all
-python ${RootDir}/workflow/setup.py install --old-and-unmanageable --force
-
-echo "install idds-prompt"
-python ${RootDir}/prompt/setup.py clean --all
-python ${RootDir}/prompt/setup.py install --old-and-unmanageable --force
+echo "build package"
+python -m build
 
 python_lib_path=`python -c 'from sysconfig import get_path; print(get_path("purelib"))'`
 echo $python_lib_path

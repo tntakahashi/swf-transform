@@ -6,26 +6,29 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 # Authors:
-# - Wen Guan, <wen.guan@cern.ch>, 2023 - 2025
+# - Wen Guan, <wen.guan@cern.ch>, 2025 - 2026
 
 
 import datetime
 import logging
+import json
 import os
 import socket
 import time
 import traceback
 
-from idds.common.utils import setup_logging, json_loads, is_panda_client_verbose
+from .utils import setup_logging
 
 try:
     # prefer local package layout
     from .brokers.activemq import Subscriber, Publisher
     from .payload_process import process_payload
+    from .conf import get_broker_config
 except Exception:
     # fallback to installed package layout
     from swf_transform.prompt.brokers.activemq import Subscriber, Publisher
     from swf_transform.prompt.payload_process import process_payload
+    from swf_transform.prompt.conf import get_broker_config
 
 
 setup_logging(__name__)
@@ -94,7 +97,7 @@ class Transformer:
         """
         self.logger.info("Get broker information through panda server.")
 
-        import idds.common.utils as idds_utils
+        import idds.common.utils as idds_utils, is_panda_client_verbose
         import pandaclient.idds_api as idds_api
 
         idds_server = self.get_idds_server()
@@ -115,7 +118,7 @@ class Transformer:
                     pass
                 elif type(meta_info) in [str]:
                     try:
-                        meta_info = json_loads(meta_info)
+                        meta_info = json.loads(meta_info)
                     except Exception as ex:
                         self.logger.warning(
                             "Failed to json loads meta info(%s): %s" % (meta_info, ex)
@@ -130,10 +133,78 @@ class Transformer:
         return meta_info
 
     def get_broker_info(self):
+        """
+        Get broker configuration with fallback strategy:
+        1. If PROMPT_TRANSFORM_CONF env var is set, try to load from that config file
+        2. Try to get from PanDA server
+        3. Fall back to default local config file (prompt.conf)
+        
+        :returns: dict with broker configs in format:
+            {
+                "transformer_broker": {...},
+                "transformer_broadcast_broker": {...},
+                "result_broker": {...}
+            }
+        """
+        # First priority: check if PROMPT_TRANSFORM_CONF env var is set
+        config_env = os.environ.get("PROMPT_TRANSFORM_CONF")
+        if config_env:
+            self.logger.info(f"PROMPT_TRANSFORM_CONF is set: {config_env}")
+            try:
+                broker_info = get_broker_config(config_path=config_env)
+                if broker_info:
+                    # Validate that we have all required broker configs
+                    transformer_broker = broker_info.get("transformer_broker")
+                    transformer_broadcast_broker = broker_info.get("transformer_broadcast_broker")
+                    result_broker = broker_info.get("result_broker")
+                    
+                    if transformer_broker and transformer_broadcast_broker and result_broker:
+                        ret = {
+                            "transformer_broker": transformer_broker,
+                            "transformer_broadcast_broker": transformer_broadcast_broker,
+                            "result_broker": result_broker,
+                        }
+                        self.logger.info("Successfully loaded broker config from PROMPT_TRANSFORM_CONF")
+                        return ret
+                    else:
+                        self.logger.warning("Config file is missing required broker configurations")
+            except Exception as ex:
+                self.logger.warning(f"Failed to load broker config from PROMPT_TRANSFORM_CONF: {ex}")
+        
+        # Second priority: try panda server
         try:
-            return self.get_broker_info_from_panda_server()
+            broker_info = self.get_broker_info_from_panda_server()
+            if broker_info:
+                self.logger.info("Successfully loaded broker config from PanDA server")
+                return broker_info
         except Exception as ex:
-            self.logger.error("Failed to get broker info: %s" % str(ex))
+            self.logger.warning(f"Failed to get broker info from PanDA server: {ex}")
+        
+        # Third priority: fall back to default local config file
+        self.logger.info("Attempting to load broker config from default local config file")
+        try:
+            broker_info = get_broker_config()
+            if broker_info:
+                # Validate that we have all required broker configs
+                transformer_broker = broker_info.get("transformer_broker")
+                transformer_broadcast_broker = broker_info.get("transformer_broadcast_broker")
+                result_broker = broker_info.get("result_broker")
+                
+                if transformer_broker and transformer_broadcast_broker and result_broker:
+                    ret = {
+                        "transformer_broker": transformer_broker,
+                        "transformer_broadcast_broker": transformer_broadcast_broker,
+                        "result_broker": result_broker,
+                    }
+                    self.logger.info("Successfully loaded broker config from local config file")
+                    return ret
+                else:
+                    self.logger.warning("Config file is missing required broker configurations")
+        except Exception as ex:
+            self.logger.error(f"Failed to load broker config from local file: {ex}")
+        
+        self.logger.error("All broker config sources failed")
+        return None
 
     def transformer_broadcast_handler(self, header, msg, handler_kwargs={}):
         """Handle broadcast messages.
@@ -241,6 +312,7 @@ class Transformer:
                     "processed_at": datetime.datetime.utcnow(),
                     "state": "done" if status else "failed",
                     "hostname": socket.getfqdn(),
+                    "panda_server_url": os.environ.get("PANDA_SERVER_URL", None),
                     "panda_task_id": os.environ.get("PanDA_TaskID"),
                     "panda_id": os.environ.get("PANDAID"),
                     "harvester_id": os.environ.get("HARVESTER_WORKER_ID"),

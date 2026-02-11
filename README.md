@@ -47,7 +47,29 @@ This transformer will access PanDA/iDDS to get the ActiveMQ configuration.
 
 ## Running notes
 
-(todo)
+To build the package with pre-build hooks:
+
+```bash
+./build.sh
+```
+
+This will:
+1. Run `tools/prompt/make/make.sh` to prepare wrapper scripts
+2. Build the Python package using `python -m build`
+
+For development installation:
+
+```bash
+pip install -e .
+```
+
+To manually run the build hook before installation:
+
+```bash
+python build_hook.py
+pip install .
+```
+
 (Migrated from iDDS/prompt. More updates to do to make the migration run correctly)
 
 ## License

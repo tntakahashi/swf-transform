@@ -25,9 +25,9 @@ import time
 import traceback
 
 
-from idds.common.utils import setup_logging
-from swf_transform.prompt.version import release_version
-from swf_transform.prompt.transformer import Transformer
+from ..prompt.utils import setup_logging
+from ..prompt.version import release_version
+from ..prompt.transformer import Transformer
 
 setup_logging(__name__, stream=sys.stdout)
 
