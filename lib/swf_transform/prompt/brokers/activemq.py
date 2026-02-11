@@ -10,6 +10,7 @@
 
 
 import logging
+import json
 import os
 import random
 import socket
@@ -21,9 +22,7 @@ import uuid
 
 from cachetools import TTLCache
 
-from idds.common.plugin.plugin_base import PluginBase
-from idds.common.utils import setup_logging, json_dumps, json_loads
-
+from ..utils import setup_logging
 
 setup_logging(__name__)
 # Allow enabling stomp debug via environment variable for diagnostics
@@ -108,7 +107,7 @@ class MessagingListener(stomp.ConnectionListener):
                 except Exception:
                     pass
 
-            self.handler(headers, json_loads(frame.body), self.handler_kwargs)
+            self.handler(headers, json.loads(frame.body), self.handler_kwargs)
             # Some stomp.py versions do not accept a `subscription=` keyword
             # argument for ack/nack. Use positional args: (message-id, subscription).
             self.conn.ack(frame.headers["message-id"])
@@ -134,13 +133,11 @@ class MessagingListener(stomp.ConnectionListener):
                 pass
 
 
-class BaseActiveMQ(PluginBase):
+class BaseActiveMQ(object):
     def __init__(
         self, name="BaseActiveMQ", namespace=None, logger=None, broker=None, lifetime=3600, **kwargs
     ):
-        super(BaseActiveMQ, self).__init__(
-            name=name, logger=logger, broker=broker, **kwargs
-        )
+        super(BaseActiveMQ, self).__init__()
 
         self.logger = logger
         self.setup_logger(self.logger)
@@ -388,7 +385,7 @@ class Publisher(BaseActiveMQ):
             if namespace is not None:
                 send_headers["namespace"] = namespace
             conn.send(
-                body=json_dumps(msg),
+                body=json.dumps(msg),
                 destination=self.broker["destination"],
                 id=self.internal_id,
                 ack="auto",
