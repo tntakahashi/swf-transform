@@ -26,8 +26,8 @@ pip install requests urllib3 argcomplete packaging stomp.py wheel cachetools
 echo "install idds-common"
 pip install idds-common
 
-echo "build package"
-python -m build
+echo "install package"
+pip install $RootDir
 
 python_lib_path=`python -c 'from sysconfig import get_path; print(get_path("purelib"))'`
 echo $python_lib_path
@@ -46,7 +46,7 @@ cd $workdir
 mkdir lib_py
 # for libname in idds pandaclient pandatools tabulate pyjwt requests urllib3 argcomplete cryptography packaging anytree networkx; do
 # for libname in idds pandaclient pandatools tabulate jwt requests urllib3 argcomplete cryptography packaging stomp cffi charset_normalizer docopt.py idna pycparser six.py websocket _cffi_backend*; do
-for libname in idds pandaclient pandatools tabulate requests urllib3 argcomplete stomp websocket charset_normalizer idna certifi packaging cachetools; do
+for libname in idds pandaclient pandatools tabulate requests urllib3 argcomplete stomp websocket charset_normalizer idna certifi packaging cachetools swf_transform; do
     echo cp -fr ${python_lib_path}/$libname lib_py
     cp -fr ${python_lib_path}/$libname lib_py
 done
@@ -62,6 +62,10 @@ cd -
 cd ${RootDir}
 echo zip -r $tmpzip  bin
 zip -r $tmpzip  bin
+
+cd ${RootDir}
+echo zip -r $tmpzip  conf
+zip -r $tmpzip  conf
 
 cd -
 
