@@ -246,9 +246,10 @@ class Transformer:
 
         try:
             if msg_type == "stop_transformer":
-                if self._run_id == run_id:
+                # Only stop if run_id is set AND matches
+                if self._run_id and self._run_id == run_id:
                     self.logger.info(
-                        f"Received stop_transformer broadcast for current run_id={run_id}, stopping transformer"
+                        f"Received stop_transformer broadcast for run_id={run_id} (current={self._run_id}), stopping transformer"
                     )
                     # Implement stopping logic if needed
                     self._to_stop = True
